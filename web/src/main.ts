@@ -1,12 +1,5 @@
-import "./global.css";
+import { createApp } from "vue";
+import App from "./App.vue";
+import store from "./store";
 
-import App from "./App.svelte";
-
-const app = new App({
-	target: document.body,
-	props: {
-		name: "world"
-	}
-});
-
-export default app;
+createApp(App).use(store).mount("#app");
