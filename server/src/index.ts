@@ -1,43 +1,28 @@
-import uws from "./lib/uWebSockets/uws";
+
+import http from "http";
+import { Server } from "socket.io";
+
+import ChunkLoader from "~/classes/ChunkLoader";
+import ClientHandler from "~/classes/ClientHandler";
 
 const port = 10001;
 
-async function main() {
-  const app = uws.App({})
-  .ws("/*", {
-    compression: uws.SHARED_COMPRESSOR,
-    maxPayloadLength: 16 * 1024,
-    idleTimeout: 8,
-    upgrade: (res, req, context) => {
-      console.log("HTTP upgrade: " + req.getUrl());
+const server = http.createServer();
+const io = new Server(server);
 
-      res.upgrade({ url: req.getUrl() },
-        req.getHeader("sec-websocket-key"),
-        req.getHeader("sec-websocket-protocol"),
-        req.getHeader("sec-websocket-extensions"),
-        context
-      );
-    },
-    open: (ws) => {
-      console.log("A WebSocket connected with URL: " + ws.url);
-    },
-    message: (ws, message, isBinary) => {
-      /* Ok is false if backpressure was built up, wait for drain */
-      let ok = ws.send(message, isBinary);
-    },
-    drain: (ws) => {
-      console.log("WebSocket backpressure: " + ws.getBufferedAmount());
-    },
-    close: (ws, code, message) => {
-      console.log("WebSocket closed");
-    }
-  }).any("/*", (res, req) => {
-    res.end("Please use uWS");
-  }).listen(port, token => {
-    if (token) {
-      console.log("Listening on port", port);
-    }
+const clients = [];
+
+io.on("connection", client => {
+
+  clients.push(new ClientHandler(client));
+
+  client.on("event", data => { 
+    console.log("data", data);
   });
-}
+  client.on("disconnect", () => {   
+    console.log("Client disconnected", client.id);
+  });
+});
 
-main();
+
+server.listen(port);
