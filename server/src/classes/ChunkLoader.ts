@@ -3,23 +3,23 @@ import fs from "fs/promises";
 import path from "path";
 
 import md5 from "~/utils/md5";
-import { Chunk } from "~/types/Chunk";
+import Chunk from "~/classes/Chunk";
 import { CharElement } from "~/types/CharElement";
 
 // size x size 
-const size = 128;
+const size = 16;
 
 export default class ChunkLoader{
   private chunkCache = {};
   private timeout: number;
   private storagePath: string;
-  private interval;
+  private purgeInterval;
 
   constructor(storagePath, timeout = 300) {
     this.storagePath = storagePath;
     this.timeout = timeout * 1000;
     
-    this.interval = setInterval(this.purge, 15 * 1000);
+    this.purgeInterval = setInterval(this.purge, 15 * 1000);
   }
 
   private async load(x: number, y: number) {
@@ -30,10 +30,10 @@ export default class ChunkLoader{
       const handle = await fs.open(location, "r");
       const content = (await handle.read()).buffer.toString();
 
-      const chunk = JSON.parse(content);
-      const check = md5(JSON.stringify(chunk.data));
+      const json = JSON.parse(content);
+      const check = md5(JSON.stringify(json.data));
 
-      if (check.toString() !== chunk.checksum) {
+      if (check.toString() !== json.checksum) {
         // Corrupted, delete
         console.error(`Chunk at ${x}-${y} is corrupt`);
         await fs.unlink(location);
@@ -42,7 +42,10 @@ export default class ChunkLoader{
         return await this.load(x, y);
       }
 
-      return chunk;
+      console.log(`Loaded chunk ${x}-${y}`)
+
+      return new Chunk(json, this.storagePath);
+
     } catch (e) {
       // Probably doesn't exist, create empty chunk
       const data: Array<CharElement> = new Array(size * size).fill({
@@ -53,29 +56,13 @@ export default class ChunkLoader{
 
       console.log(`New chunk loaded at ${x}-${y}`);
 
-      return {
+      return new Chunk({
         x,
         y,
         lastModified: new Date(),
         data,
         checksum: md5(data)
-      };
-    }
-  }
-
-  private async save(chunk) {
-    const hash = md5(`${chunk.x}-${chunk.y}`);
-    const location = path.join(this.storagePath, hash);
-
-    chunk.lastModified = new Date();
-    chunk.checkSum = md5(JSON.stringify(chunk.data));
-
-    const saveData = JSON.stringify(chunk);
-
-    try {
-      await fs.writeFile(location, saveData);
-    } catch (e) {
-      console.error(`Could not save chunk ${hash}: ${e.code}`);
+      }, this.storagePath);
     }
   }
 
@@ -86,7 +73,7 @@ export default class ChunkLoader{
     keys.forEach(async k => {
       const chunkDate = this.chunkCache[k].lastModified as Date;
       if (now - chunkDate.getTime() >= this.timeout) {
-        await this.save(this.chunkCache[k]);
+        await this.chunkCache[k].save(this.storagePath);
         delete this.chunkCache[k];
       }
     });
