@@ -61,7 +61,7 @@ module.exports = {
 	mode,
 	plugins: [
 		new MiniCssExtractPlugin({
-			filename: '[name].css'
+			filename: '[name]-[contenthash:8].css'
 		})
 	],
 	devtool: prod ? false : 'source-map',
