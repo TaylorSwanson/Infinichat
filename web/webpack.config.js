@@ -1,37 +1,39 @@
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const path = require('path');
-const sveltePreprocess = require('svelte-preprocess');
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const HtmlWebpackPlugin = require("html-webpack-plugin");
+const path = require("path");
+const sveltePreprocess = require("svelte-preprocess");
 
-const mode = process.env.NODE_ENV || 'development';
-const prod = mode === 'production';
+const mode = process.env.NODE_ENV || "development";
+const prod = mode === "production";
 
 module.exports = {
 	entry: {
-		'build/bundle': ['./src/main.ts']
+		"build/bundle": ["./src/main.ts"]
 	},
 	resolve: {
 		alias: {
-			svelte: path.dirname(require.resolve('svelte/package.json'))
+			svelte: path.dirname(require.resolve("svelte/package.json"))
 		},
-		extensions: ['.mjs', '.js', '.ts', '.svelte'],
-		mainFields: ['svelte', 'browser', 'module', 'main']
+		extensions: [".mjs", ".js", ".ts", ".svelte"],
+		mainFields: ["svelte", "browser", "module", "main"]
 	},
 	output: {
-		path: path.join(__dirname, '/public'),
-		filename: '[name].js',
-		chunkFilename: '[name].[id].js'
+		path: path.join(__dirname, "/public"),
+		filename: "[name]-[contenthash:8].js",
+		chunkFilename: "[name].[id].js",
+		clean: true
 	},
 	module: {
 			rules: [
 				{
 					test: /\.ts$/,
-					loader: 'ts-loader',
+					loader: "ts-loader",
 					exclude: /node_modules/
 				},
 				{
 				test: /\.svelte$/,
 				use: {
-					loader: 'svelte-loader',
+					loader: "svelte-loader",
 					options: {
 						compilerOptions: {
 							dev: !prod
@@ -46,7 +48,7 @@ module.exports = {
 				test: /\.css$/,
 				use: [
 					MiniCssExtractPlugin.loader,
-					'css-loader'
+					"css-loader"
 				]
 			},
 			{
@@ -61,10 +63,13 @@ module.exports = {
 	mode,
 	plugins: [
 		new MiniCssExtractPlugin({
-			filename: '[name]-[contenthash:8].css'
-		})
+			filename: "[name]-[contenthash:8].css"
+		}),
+		new HtmlWebpackPlugin({
+			title: "Infinichat",
+		}),
 	],
-	devtool: prod ? false : 'source-map',
+	devtool: prod ? false : "source-map",
 	devServer: {
 		hot: true
 	}
