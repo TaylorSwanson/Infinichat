@@ -20,7 +20,7 @@ import { defineComponent } from "vue";
 import Chunk from "@/components/Chunk.vue";
 
 // Number of chars * size of char block
-const gridSize = 16 * 10;
+const gridSize = 32 * 10;
 // Number of chunks to load off screen in each direction
 const offscreenCount = 2;
 
@@ -65,10 +65,11 @@ export default defineComponent({
       this.chunkStartY = Math.round(+this.dragTarget.style.top.slice(0, -2) / gridSize % gridSize);
     },
     updateChunks() {
-      const minX = this.chunkStartX;
-      const minY = this.chunkStartY;
-      const maxX = minX + this.widthX;
-      const maxY = minY + this.widthY;
+      // ±1 Here to account for width of visible blocks too
+      const minX = -this.chunkStartX - 1 - offscreenCount / 2;
+      const minY = -this.chunkStartY - 1 - offscreenCount / 2;
+      const maxX = minX + this.widthX + 1 + offscreenCount;
+      const maxY = minY + this.widthY + 1 + offscreenCount;
 
       // Fill in screen, don't duplicate existing
       for (let x = minX; x < maxX; x++) {
@@ -82,16 +83,21 @@ export default defineComponent({
         }
       }
 
-      // // Clear chunks out of bounds
-      // this.chunks.forEach(chunk => {
-      //   if (chunk.x > minX && maxX < chunk.x) return;
-      //   if (chunk.y > minY && maxY < chunk.y) return;
+      // Clear chunks out of bounds
+      this.chunks.forEach(chunk => {
 
-      //   const idx = this.chunks.indexOf(chunk);
-      //   if (idx === -1) return;
+        // Check if chunk position falls within rectangle of window
+        const x = chunk.x;
+        const y = chunk.y;
 
-      //   this.chunks.splice(idx, 1);
-      // });
+        if ((x > minX && x < maxX && y > minY && y < maxY)) return;
+
+        const idx = this.chunks.indexOf(chunk);
+        if (idx === -1) return;
+
+        this.chunks.splice(idx, 1);
+
+      });
     },
     dragMouseDown(event) {
       event.preventDefault();
@@ -158,6 +164,7 @@ html, body
   top: 0px
   left:0px
   position: relative
+  overflow: hidden
 
   .chunk-container
     position: absolute

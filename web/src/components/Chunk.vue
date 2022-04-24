@@ -26,7 +26,7 @@ const debounce = (fn, ms = 100) => {
 };
 
 // Side length
-const size = 16;
+const size = 32;
 const gridSize = size * 10;
 
 export default defineComponent({
@@ -86,7 +86,7 @@ export default defineComponent({
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="sass">
 
-$size: 16
+$size: 32
 
 .chunk
   position: absolute
