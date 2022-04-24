@@ -2,6 +2,9 @@
 .chunk(
   :style="chunkStyle"
 )
+  p(
+    v-once
+  ) {{ x }}, {{ y }}
   .char(
     v-for="(char, i) in chars"
     :key="i"

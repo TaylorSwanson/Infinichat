@@ -41,8 +41,8 @@ export default defineComponent({
   data() {
     return {
       dragTarget: null,
-      chunksX: 0,
-      chunksY: 0,
+      widthX: 0,
+      widthY: 0,
       chunkStartX: 0,
       lastChunkStartX: 0,
       chunkStartY: 0,
@@ -59,42 +59,39 @@ export default defineComponent({
   methods: {
     calcChunkCount() {
       // Quantity of chunks in each direction
-      this.chunksX = Math.ceil(window.innerWidth / gridSize % gridSize);
-      this.chunksY = Math.ceil(window.innerHeight / gridSize % gridSize);
-      this.chunkStartX = -Math.round(+this.dragTarget.style.left.slice(0, -2) / gridSize % gridSize);
-      this.chunkStartY = -Math.round(+this.dragTarget.style.top.slice(0, -2) / gridSize % gridSize);
+      this.widthX = Math.ceil(window.innerWidth / gridSize % gridSize);
+      this.widthY = Math.ceil(window.innerHeight / gridSize % gridSize);
+      this.chunkStartX = Math.round(+this.dragTarget.style.left.slice(0, -2) / gridSize % gridSize);
+      this.chunkStartY = Math.round(+this.dragTarget.style.top.slice(0, -2) / gridSize % gridSize);
     },
     updateChunks() {
+      const minX = this.chunkStartX;
+      const minY = this.chunkStartY;
+      const maxX = minX + this.widthX;
+      const maxY = minY + this.widthY;
+
       // Fill in screen, don't duplicate existing
-      for (let x = this.chunkStartX - offscreenCount / 2; x < this.chunkStartX + this.chunksX + offscreenCount; x++) {
-        for (let y = this.chunkStartY - offscreenCount / 2; y < this.chunkStartY + this.chunksY + offscreenCount; y++) {
+      for (let x = minX; x < maxX; x++) {
+        for (let y = minY; y < maxY; y++) {
           // Don't make duplicates
           if (this.chunks?.find(c => c.x === x && c.y === y)) {
             // Existing chunk
             continue;
           }
-
           this.chunks.push({ x, y });
         }
       }
 
-      // Clear chunks out of bounds
-      const minX = this.chunkStartX - offscreenCount / 2;
-      const minY = this.chunkStartY - offscreenCount / 2;
-      const maxX = this.chunkStartX + this.chunksX + offscreenCount;
-      const maxY = this.chunkStartY + this.chunksY + offscreenCount;
+      // // Clear chunks out of bounds
+      // this.chunks.forEach(chunk => {
+      //   if (chunk.x > minX && maxX < chunk.x) return;
+      //   if (chunk.y > minY && maxY < chunk.y) return;
 
-      this.chunks.forEach(chunk => {
-        if (chunk.x > minX) return;
-        if (chunk.y > minY) return;
-        if (chunk.x < maxX) return;
-        if (chunk.y < maxY) return;
+      //   const idx = this.chunks.indexOf(chunk);
+      //   if (idx === -1) return;
 
-        const idx = this.chunks.indexOf(chunk);
-        if (idx === -1) return;
-
-        this.chunks.splice(idx, 1);
-      });
+      //   this.chunks.splice(idx, 1);
+      // });
     },
     dragMouseDown(event) {
       event.preventDefault();
