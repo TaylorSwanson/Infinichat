@@ -53,49 +53,48 @@ export default defineComponent({
   mounted() {
     this.dragTarget = document.getElementById("dragTarget");
 
-    // Create the first chunks
-    this.generateChunks();
+    this.calcChunkCount();
+    this.updateChunks();
   },
   methods: {
     calcChunkCount() {
       // Quantity of chunks in each direction
       this.chunksX = Math.ceil(window.innerWidth / gridSize % gridSize);
       this.chunksY = Math.ceil(window.innerHeight / gridSize % gridSize);
-      this.chunkStartX = Math.floor(- +this.dragTarget.style.left.slice(0, -2) % gridSize);
-      this.chunkStartY = Math.floor(- +this.dragTarget.style.top.slice(0, -2) % gridSize);
+      this.chunkStartX = -Math.round(+this.dragTarget.style.left.slice(0, -2) / gridSize % gridSize);
+      this.chunkStartY = -Math.round(+this.dragTarget.style.top.slice(0, -2) / gridSize % gridSize);
     },
-    generateChunks(skipChunks) {
-      this.calcChunkCount();
-
-      const startingVal = -(offscreenCount / 2);
-
-      // Fill in remainder of the screen
-      for (let i = startingVal; i < this.chunksY - startingVal; i++) {
-        for (let j = startingVal; j < this.chunksX - startingVal; j++) {
+    updateChunks() {
+      // Fill in screen, don't duplicate existing
+      for (let x = this.chunkStartX - offscreenCount / 2; x < this.chunkStartX + this.chunksX + offscreenCount; x++) {
+        for (let y = this.chunkStartY - offscreenCount / 2; y < this.chunkStartY + this.chunksY + offscreenCount; y++) {
           // Don't make duplicates
-          if (skipChunks?.find(c => c.x === x && c.y === y)) return;
+          if (this.chunks?.find(c => c.x === x && c.y === y)) {
+            // Existing chunk
+            continue;
+          }
 
-          this.chunks.push({ x: i, y: j });
+          this.chunks.push({ x, y });
         }
       }
-    },
-    // Less demanding way to load chunks and delete old ones
-    // This keeps current chunks in place
-    updateChunks() {
 
+      // Clear chunks out of bounds
+      const minX = this.chunkStartX - offscreenCount / 2;
+      const minY = this.chunkStartY - offscreenCount / 2;
+      const maxX = this.chunkStartX + this.chunksX + offscreenCount;
+      const maxY = this.chunkStartY + this.chunksY + offscreenCount;
 
-      // Add chunks in viewport that don't exist yet
-      this.generateChunks(this.chunks);
+      this.chunks.forEach(chunk => {
+        if (chunk.x > minX) return;
+        if (chunk.y > minY) return;
+        if (chunk.x < maxX) return;
+        if (chunk.y < maxY) return;
 
-      // // Delete chunks not in list
-      // this.chunks.forEach(chunk => {
-      //   if (!keepChunks.includes(chunk)) {
-      //     const idx = this.chunks.indexOf(chunk);
-      //     if (idx === -1) return;
-          
-      //     this.chunks.splice(idx, 1);
-      //   }
-      // });
+        const idx = this.chunks.indexOf(chunk);
+        if (idx === -1) return;
+
+        this.chunks.splice(idx, 1);
+      });
     },
     dragMouseDown(event) {
       event.preventDefault();
@@ -127,12 +126,19 @@ export default defineComponent({
       this.dragTarget.style.left = (+this.dragTarget.style.left.slice(0, -2) + dx) + "px";
       this.dragTarget.style.top = (+this.dragTarget.style.top.slice(0, -2) + dy) + "px";
 
-      this.updateChunks();
+      this.calcChunkCount();
     },
     closeDragElement() {
       document.onmouseup = null;
       document.onmousemove = null;
     }
+  },
+  watch: {
+    // Only update when views change
+    chunkStartX() { this.updateChunks(); },
+    chunkStartY() { this.updateChunks(); },
+    chunksX() { this.updateChunks(); },
+    chunksY() { this.updateChunks(); },
   },
   components: {
     Chunk

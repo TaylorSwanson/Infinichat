@@ -2,7 +2,6 @@
 .chunk(
   :style="chunkStyle"
 )
-  p {{ created }}
   .char(
     v-for="(char, i) in chars"
     :key="i"
@@ -40,8 +39,7 @@ export default defineComponent({
       chunkStyle: {
         top: this.y * gridSize + "px",
         left: this.x * gridSize + "px"
-      },
-      created: new Date()
+      }
     }
   },
   created() {
