@@ -67,7 +67,7 @@ export default class Chunk extends EventEmitter {
     }
   }
 
-  public edit(start: number, data: Array<CharElement>) {
+  public edit(start: number, data: Array<CharElement>, editorId?: string) {
     data.forEach((char, i) => {
       this.data[start + i] = char;
     });
@@ -76,7 +76,10 @@ export default class Chunk extends EventEmitter {
     this.checksum = md5(JSON.stringify(this.data));
 
     // Someone may be listening
-    this.emit("update", this);
+    this.emit("edit", {
+      chunk: this,
+      editorId
+    });
 
     this.saveDebounced();
   }
