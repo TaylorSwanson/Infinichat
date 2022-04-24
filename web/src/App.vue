@@ -20,10 +20,8 @@ import { defineComponent } from "vue";
 import Chunk from "@/components/Chunk.vue";
 
 // Pixels before drag starts
-const dragThreshold = 10;
+const dragThreshold = 3;
 
-let startX = 0;
-let startY = 0;
 let lastX = 0;
 let lastY = 0;
 
@@ -51,8 +49,6 @@ export default defineComponent({
       event.preventDefault();
 
       // Where the cursor is now
-      startX = event.clientX;
-      startY = event.clientY;
       lastX = event.clientX;
       lastY = event.clientY;
       
@@ -63,10 +59,10 @@ export default defineComponent({
       const dx = event.clientX - lastX;
       const dy = event.clientY - lastY;
 
-      const dragDistance = calcDistance(
-        event.clientX, event.clientY,
-        dx, dy
-      );
+      const dragDistance = Math.abs(calcDistance(
+        lastX, lastY,
+        event.clientX, event.clientY
+      ));
 
       lastX = event.clientX;
       lastY = event.clientY;
