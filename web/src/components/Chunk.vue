@@ -3,7 +3,7 @@
   :style="chunkStyle"
 )
   .char(
-    v-for="(piece, i) in data"
+    v-for="(piece, i) in getThisChunk().data"
     :key="i"
     :class="{ 'active': isChunkActive && i === activePiece.index }"
     @click.native.prevent="handleClick(i)"
@@ -31,70 +31,44 @@ export default defineComponent({
   props: ["x", "y"],
   data() {
     return {
-      data: [],
-      queuedChanges: [],
-      debounceUpdate: debounce(this.update),
+      // queuedChanges: [],
+      // debounceUpdate: debounce(this.update),
       chunkStyle: {
         top: this.y * gridSize + "px",
         left: this.x * gridSize + "px"
       },
-      reconnectInterval: null
     }
   },
   created() {
-    if (this.isConnected) {
-      this.initialSetup();
-    } else {
-      // Retry setup over and over
-      this.reconnectInterval = setInterval(() => {
-        if (!this.isConnected) return;
 
-        this.initialSetup();
-        clearInterval(this.reconnectInterval);
-        this.reconnectInterval = null;
-      }, 1000);
-    }
-  },
-  beforeUnmount() {
-    this.socket.off("fullChunk", this.fullChunkHandler);
-
-    clearInterval(this.reconnectInterval);
-    this.reconnectInterval = null;
-  },
-  computed: {
-    ...mapGetters({
-      socket: "getSocket",
-      isConnected: "isConnected",
-      activePiece: "activePiece"
-    }),
-    chars() {
-      return this.chunk?.data?.map(d => d.char);
-    },
-    isChunkActive() {
-      return this.activePiece.x === this.x && this.activePiece.y === this.y;
-    }
   },
   methods: {
     ...mapActions({
-      setActive: "setActive"
+      setActive: "setActive",
+      getChunk: "getChunk",
     }),
-    initialSetup() {
-      this.socket.on("fullChunk", this.fullChunkHandler);
-      this.socket.emit("get", { x: this.x, y: this.y });
-    },
-    fullChunkHandler(chunk) {
-      if (chunk.x === this.x && chunk.y === this.y) {
-        this.data = chunk.data;
-      }
-    },
     handleClick(i) {
       this.setActive({
         x: this.x,
         y: this.y,
         index: i
       })
+    },
+    getThisChunk() {
+      return this.getChunk({
+        x: this.x,
+        y: this.y
+      });
     }
-  }
+  },
+  computed: {
+    ...mapGetters({
+      activePiece: "activePiece"
+    }),
+    isChunkActive() {
+      return this.activePiece.x === this.x && this.activePiece.y === this.y;
+    }
+  },
 });
 </script>
 
@@ -125,7 +99,5 @@ $size: 16
 
     &.active
       background-color: #F2F5F9
-
-    
 
 </style>

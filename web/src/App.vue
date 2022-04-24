@@ -2,7 +2,6 @@
 .drag-container(
   @mousedown="dragMouseDown"
   @mouseup="closeDragElement"
-  @keydown.native.prevent="handleKeydown"
 )
   .chunk-container(
     id="dragTarget"
@@ -48,12 +47,12 @@ export default defineComponent({
       chunkStartX: 0,
       lastChunkStartX: 0,
       chunkStartY: 0,
-      lastChunkStartY: 0,
-      chunks: []
+      lastChunkStartY: 0
     }
   },
   mounted() {
     this.dragTarget = document.getElementById("dragTarget");
+    window.addEventListener("keydown", this.handleKeydown);
 
     this.connect();
 
@@ -62,12 +61,18 @@ export default defineComponent({
   },
   computed: {
     ...mapGetters({
-      socket: "getSocket"
+      socket: "getSocket",
+      chunks: "getChunks",
+      isConnected: "isConnected"
     }),
   },
   methods: {
     ...mapActions({
-      connect: "connect"
+      connect: "connect",
+      moveCursor: "moveCursor",
+      placeChar: "placeChar",
+      addChunk: "addChunk",
+      removeChunk: "removeChunk",
     }),
     calcChunkCount() {
       // Quantity of chunks in each direction
@@ -91,8 +96,8 @@ export default defineComponent({
             // Existing chunk
             continue;
           }
-          this.socket.emit("subscribe", { x, y });
-          this.chunks.push({ x, y });
+
+          this.addChunk({ x, y });
         }
       }
 
@@ -103,14 +108,9 @@ export default defineComponent({
         const x = chunk.x;
         const y = chunk.y;
 
-        if ((x > minX && x < maxX && y > minY && y < maxY)) return;
+        if (x > minX && x < maxX && y > minY && y < maxY) return;
 
-        const idx = this.chunks.indexOf(chunk);
-        if (idx === -1) return;
-
-        this.socket.emit("unsubscribe", { x, y });
-
-        this.chunks.splice(idx, 1);
+        this.removeChunk(chunk);
       });
     },
     dragMouseDown(event) {
@@ -136,8 +136,11 @@ export default defineComponent({
       lastY = event.clientY;
 
       if (dragDistance <= dragThreshold) {
-        return event.preventDefault();
+        return;
       }
+
+      event.preventDefault();
+      event.stopPropagation();
 
       // set the element's new position:
       this.dragTarget.style.left = (+this.dragTarget.style.left.slice(0, -2) + dx) + "px";
@@ -145,12 +148,18 @@ export default defineComponent({
 
       this.calcChunkCount();
     },
-    closeDragElement() {
+    closeDragElement(event) {
       document.onmouseup = null;
       document.onmousemove = null;
     },
     handleKeydown(event) {
       console.log("kd", event);
+      if (event.keyCode === 37) return this.moveCursor({ x: -1, y: 0 });
+      if (event.keyCode === 38) return this.moveCursor({ x: 0, y: -1 });
+      if (event.keyCode === 39) return this.moveCursor({ x: 1, y: 0 });
+      if (event.keyCode === 40) return this.moveCursor({ x: 0, y: 1 });
+
+      this.placeChar(event.key);
     }
   },
   watch: {
