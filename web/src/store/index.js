@@ -82,30 +82,34 @@ export default createStore({
       const startingIdx = state.activePiece.index;
 
       if (x !== 0) {
-        // Jump large spaces
-        const minNumBlocks = Math.floor(x / size);
-        state.activePiece.x += minNumBlocks * size;
-        x -= minNumBlocks * size;
-
         const rows = Math.floor(startingIdx / size);
         const col = startingIdx - rows * size;
-
         if (col + x < 0) {
           // Wrap left
-          // state.activePiece.index = rows * size + size;
+          state.activePiece.index = rows * size + size;
           state.activePiece.x -= 1;
-        } else if (col + x > 7) {
+        } else if (col + x > size - 1) {
           // Wrap right
-          state.activePiece.index = 0;
+          state.activePiece.index = rows * size - 1;
           state.activePiece.x += 1;
         }
-
         state.activePiece.index += x;
       }
 
       if (y !== 0) {
-        const newIdx = startingIdx + y * size;
-        state.activePiece.index = newIdx;
+        const rows = Math.floor(startingIdx / size);
+        const col = startingIdx - rows * size;
+        if (rows + y >= size) {
+          // Wrap down
+          state.activePiece.index = col % (size * size);
+          state.activePiece.y += 1;
+        } else if (startingIdx + y * size < 0) {
+          // Wrap up
+          state.activePiece.index = col + (size) * (size - 1)
+          state.activePiece.y -= 1;
+        } else {
+          state.activePiece.index += y * size;
+        }
       }
     },
     async placeChar({ state, dispatch }, char) {
