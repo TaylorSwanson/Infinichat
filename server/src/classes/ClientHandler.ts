@@ -4,7 +4,8 @@ import Chunk from "./Chunk";
 export default class ClientHandler{
   private socket;
   private chunkLoader;
-  private subscriptions: Array<Chunk>;
+  private subscriptions: Array<Chunk> = [];
+  private subscriptionsInProgress: Array<string> = [];
 
   private editListenerHandler: Function;
 
@@ -29,26 +30,46 @@ export default class ClientHandler{
       socket.send("chunk", chunk.get());
     });
 
-    this.socket.on("subscribe", payload => {
+    this.socket.on("subscribe", async payload => {
       const { x, y } = payload;
-      const key = `${x}-${y}`;
+      const key = `${x}x${y}`;
 
       // Don't subscribe multiple times
       if (this.subscriptions[key]) return;
 
-      const chunk = this.chunkLoader.get(x, y);
-      this.subscriptions.push(chunk);
+      console.log("Subscribing", x, y);
+
+      // Eliminate race condition between rapid subscribe/unsubscribe
+      if (this.subscriptionsInProgress.find(s => s === key)) return;
+      this.subscriptionsInProgress.push(key);
+
+      const chunk = await this.chunkLoader.getChunk(x, y);
+      this.subscriptions[key] = chunk;
+
+      // Keep the chunk alive
+      chunk.subscribers++;
       
       // Start subscription
       this.subscriptions[key]?.on("edit", this.editListenerHandler);
+
+      // Remove "in progress" flag
+      const idx = this.subscriptionsInProgress.findIndex(s => s === key);
+      if (idx === -1) return;
+      this.subscriptionsInProgress.splice(idx, 1);
     });
 
     this.socket.on("unsubscribe", payload => {
       const { x, y } = payload;
-      const key = `${x}-${y}`;
-
+      const key = `${x}x${y}`;
+      
       // Stop subscription
-      this.subscriptions[key]?.off("edit", this.editListenerHandler);
+      if (this.subscriptions[key]) {
+        this.subscriptions[key].off("edit", this.editListenerHandler);
+        this.subscriptions[key].subscribers--;
+      }
+
+      console.log("Unsubscribing", x, y);
+
       // Unref
       delete this.subscriptions[key];
     });
@@ -58,6 +79,16 @@ export default class ClientHandler{
 
       const chunk = this.chunkLoader.get(x, y);
       chunk.edit(start, data, this.socket.id);
+    });
+
+    this.socket.on("disconnect", () => {
+      // Unsubscribe from all
+      this.subscriptions.forEach(subscription => {
+        subscription.off("edit", this.editListenerHandler as any);
+        subscription.subscribers--;
+      });
+
+      this.subscriptions = [];
     });
   }
 }

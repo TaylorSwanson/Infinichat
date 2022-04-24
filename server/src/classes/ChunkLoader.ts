@@ -93,6 +93,8 @@ export default class ChunkLoader{
     const now = Date.now();
 
     keys.forEach(async k => {
+      if (this.chunkCache[k].subscribers > 0) return;
+      
       const chunkDate = this.chunkCache[k].lastModified as Date;
       if (now - chunkDate.getTime() >= this.timeout) {
         await this.chunkCache[k].save(this.storagePath);

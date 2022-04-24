@@ -18,6 +18,7 @@
 import { defineComponent } from "vue";
 
 import Chunk from "@/components/Chunk.vue";
+import { mapGetters } from "vuex";
 
 // Number of chars * size of char block
 const gridSize = 32 * 10;
@@ -56,6 +57,11 @@ export default defineComponent({
     this.calcChunkCount();
     this.updateChunks();
   },
+  computed: {
+    ...mapGetters({
+      socket: "getSocket"
+    }),
+  },
   methods: {
     calcChunkCount() {
       // Quantity of chunks in each direction
@@ -79,6 +85,7 @@ export default defineComponent({
             // Existing chunk
             continue;
           }
+          this.socket.emit("subscribe", { x, y });
           this.chunks.push({ x, y });
         }
       }
@@ -95,8 +102,9 @@ export default defineComponent({
         const idx = this.chunks.indexOf(chunk);
         if (idx === -1) return;
 
-        this.chunks.splice(idx, 1);
+        this.socket.emit("unsubscribe", { x, y });
 
+        this.chunks.splice(idx, 1);
       });
     },
     dragMouseDown(event) {

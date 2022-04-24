@@ -25,6 +25,7 @@ const debounce = (fn: Function, ms = 300) => {
 export default class Chunk extends EventEmitter {
   public x: number;
   public y: number;
+  public subscribers = 0;
   public lastModified: Date;
   public data: Array<CharElement>;
   public checksum: string;
