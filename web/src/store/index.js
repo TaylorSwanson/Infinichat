@@ -1,6 +1,8 @@
 import { createStore } from "vuex";
 import { io, Socket } from "socket.io-client";
 
+const size = 8;
+
 export default createStore({
   state: {
     socket: null,
@@ -74,20 +76,47 @@ export default createStore({
         index: payload.index
       };
     },
-    moveCursor({ state }, dir) {
-      const { x, y } = dir;
+    translateCursor({ state }, dir) {
+      let { x, y } = dir;
+
+      const startingIdx = state.activePiece.index;
+
+      if (x !== 0) {
+        // Jump large spaces
+        const minNumBlocks = Math.floor(x / size);
+        state.activePiece.x += minNumBlocks * size;
+        x -= minNumBlocks * size;
+
+        const rows = Math.floor(startingIdx / size);
+        const col = startingIdx - rows * size;
+
+        if (col + x < 0) {
+          // Wrap left
+          // state.activePiece.index = rows * size + size;
+          state.activePiece.x -= 1;
+        } else if (col + x > 7) {
+          // Wrap right
+          state.activePiece.index = 0;
+          state.activePiece.x += 1;
+        }
+
+        state.activePiece.index += x;
+      }
+
+      if (y !== 0) {
+        const newIdx = startingIdx + y * size;
+        state.activePiece.index = newIdx;
+      }
     },
-    placeChar({ state, dispatch }, char) {
+    async placeChar({ state, dispatch }, char) {
       const { x, y, index } = state.activePiece;
 
-      const chunk = state.chunks.find(c =>
-        c.x === x && c.y === y
-      );
+      const chunk = await dispatch("getChunk", ({ x, y }));
       if (!chunk) return;
 
-      chunk.data[index] = char;
+      chunk.data[index].char = char;
 
-      dispatch("moveCursor", { x: 1, y: 0 });
+      dispatch("translateCursor", { x: 1, y: 0 });
     }
   },
   modules: {

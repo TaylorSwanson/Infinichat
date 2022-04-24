@@ -70,7 +70,7 @@ export default defineComponent({
   methods: {
     ...mapActions({
       connect: "connect",
-      moveCursor: "moveCursor",
+      translateCursor: "translateCursor",
       placeChar: "placeChar",
       addChunk: "addChunk",
       removeChunk: "removeChunk",
@@ -154,11 +154,21 @@ export default defineComponent({
       document.onmousemove = null;
     },
     handleKeydown(event) {
-      console.log("kd", event);
-      if (event.keyCode === 37) return this.moveCursor({ x: -1, y: 0 });
-      if (event.keyCode === 38) return this.moveCursor({ x: 0, y: -1 });
-      if (event.keyCode === 39) return this.moveCursor({ x: 1, y: 0 });
-      if (event.keyCode === 40) return this.moveCursor({ x: 0, y: 1 });
+      // Ignore modifiers
+      const ignore = [
+        8, 9, 16, 17, 18, 19, 20, 27, 33, 34, 224,
+        35, 36, 45, 46, 91, 92, 93, 106, 107, 109,
+        110, 111, 144, 145
+      ];
+      if (ignore.includes(event.keyCode)) return;
+
+      if (event.keyCode === 13) return// this.returnCursor();
+      if (event.keyCode === 37) return this.translateCursor({ x: -1, y: 0 });
+      if (event.keyCode === 38) return this.translateCursor({ x: 0, y: -1 });
+      if (event.keyCode === 39) return this.translateCursor({ x: 1, y: 0 });
+      if (event.keyCode === 40) return this.translateCursor({ x: 0, y: 1 });
+
+      if (event.key?.length > 1) return;
 
       this.placeChar(event.key);
     }

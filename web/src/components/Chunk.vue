@@ -77,6 +77,7 @@ $size: 8
   left: 0px
   top: 0px
   overflow: hidden
+  box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.1)
 
   .char
     width: 20px
