@@ -83,4 +83,13 @@ export default class Chunk extends EventEmitter {
 
     this.saveDebounced();
   }
+
+  public get() {
+    return {
+      x: this.x,
+      y: this.y,
+      data: this.data,
+      lastModified: this.lastModified
+    };
+  }
 }

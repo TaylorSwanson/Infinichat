@@ -46,7 +46,7 @@ export default defineComponent({
     }
   },
   created() {
-    this.socket.send("");
+    this.socket.emit("get", { x: this.x, y: this.y });
   },
   computed: {
     ...mapGetters({

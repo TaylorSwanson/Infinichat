@@ -20,11 +20,13 @@ export default class ClientHandler{
       socket.send("edit", { chunk: chunkPayload.chunk });
     }
 
-    this.socket.on("get", data => {
+    this.socket.on("get", async data => {
       const { x, y } = data;
 
-      const chunk = this.chunkLoader.get(x, y);
-      socket.send("get", chunk);
+      console.log("Getting", x, y);
+
+      const chunk = await this.chunkLoader.getChunk(x, y);
+      socket.send("chunk", chunk.get());
     });
 
     this.socket.on("subscribe", payload => {
