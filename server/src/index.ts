@@ -21,13 +21,16 @@ const clients = [];
 function main() {
   const chunkLoader = new ChunkLoader(location);
   
+  // Watch for incoming ws connections, events handled by ClientHandler
   io.on("connection", client => {
+    console.log("Client connected", client.id);
+
     const handler = new ClientHandler(client, chunkLoader);
   
     clients.push(handler);
   
     client.on("disconnect", () => {   
-      console.log("Client disconnected");
+      console.log("Client disconnected", client.id);
       
       // Remove reference
       const idx = clients.indexOf(handler);

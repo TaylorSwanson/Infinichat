@@ -19,7 +19,6 @@ WORKDIR /usr/src/app
 
 COPY --from=builder /usr/builder/node_modules ./node_modules
 COPY --from=builder /usr/builder/dist ./dist
-COPY ./package.json ./
 
 # Remove apk
 RUN rm -rf /sbin/apk /etc/apk /lib/apk /usr/share/apk /var/lib/apk
