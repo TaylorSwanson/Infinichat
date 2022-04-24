@@ -18,10 +18,10 @@
 import { defineComponent } from "vue";
 
 import Chunk from "@/components/Chunk.vue";
-import { mapGetters } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 // Number of chars * size of char block
-const gridSize = 32 * 10;
+const gridSize = 16 * 20;
 // Number of chunks to load off screen in each direction
 const offscreenCount = 2;
 
@@ -54,6 +54,8 @@ export default defineComponent({
   mounted() {
     this.dragTarget = document.getElementById("dragTarget");
 
+    this.connect();
+
     this.calcChunkCount();
     this.updateChunks();
   },
@@ -63,6 +65,9 @@ export default defineComponent({
     }),
   },
   methods: {
+    ...mapActions({
+      connect: "connect"
+    }),
     calcChunkCount() {
       // Quantity of chunks in each direction
       this.widthX = Math.ceil(window.innerWidth / gridSize % gridSize);

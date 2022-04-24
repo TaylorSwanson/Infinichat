@@ -18,7 +18,7 @@ export default class ClientHandler{
       // Don't send change to editor (ourselves)
       if (chunkPayload.editorId === socket.id) return;
 
-      socket.send("edit", { chunk: chunkPayload.chunk });
+      socket.emit("edit", { chunk: chunkPayload.chunk });
     }
 
     this.socket.on("get", async data => {
@@ -27,7 +27,7 @@ export default class ClientHandler{
       console.log("Getting", x, y);
 
       const chunk = await this.chunkLoader.getChunk(x, y);
-      socket.send("chunk", chunk.get());
+      socket.emit("fullChunk", chunk.get());
     });
 
     this.socket.on("subscribe", async payload => {

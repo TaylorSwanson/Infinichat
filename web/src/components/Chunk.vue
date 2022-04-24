@@ -2,15 +2,12 @@
 .chunk(
   :style="chunkStyle"
 )
-  p(
-    v-once
-  ) {{ x }}, {{ y }}
   .char(
-    v-for="(char, i) in chars"
+    v-for="(piece, i) in data"
     :key="i"
-    :class="{ 'active': i === activeChar }"
-    @keydown.native.prevent="handleKeydown($event, i)"
-  ) {{ char }}
+    :class="{ 'active': piece === activePiece }"
+    @keydown.native.prevent="handleKeydown($event, piece)"
+  ) {{ piece.char }}
 </template>
 
 <script>
@@ -34,40 +31,65 @@ export default defineComponent({
   props: ["x", "y"],
   data() {
     return {
-      chunk: {},
-      activeChar: -1,
-      startPosition: -1,
+      data: [],
+      activePiece: {},
       queuedChanges: [],
       debounceUpdate: debounce(this.update),
       chunkStyle: {
         top: this.y * gridSize + "px",
         left: this.x * gridSize + "px"
-      }
+      },
+      reconnectInterval: null
     }
   },
   created() {
-    this.socket.emit("get", { x: this.x, y: this.y });
+    if (this.isConnected) {
+      this.initialSetup();
+    } else {
+      // Retry setup over and over
+      this.reconnectInterval = setInterval(() => {
+        if (!this.isConnected) return;
+
+        this.initialSetup();
+        clearInterval(this.reconnectInterval);
+        this.reconnectInterval = null;
+      }, 1000);
+    }
+  },
+  beforeUnmount() {
+    this.socket.off("fullChunk", this.fullChunkHandler);
+
+    clearInterval(this.reconnectInterval);
+    this.reconnectInterval = null;
   },
   computed: {
     ...mapGetters({
-      socket: "getSocket"
+      socket: "getSocket",
+      isConnected: "isConnected"
     }),
     chars() {
       return this.chunk?.data?.map(d => d.char);
     }
   },
   methods: {
-    handleClick(i) {
-      this.activeChar = i;
-      this.startPosition = i;
+    initialSetup() {
+      this.socket.on("fullChunk", this.fullChunkHandler);
+      this.socket.emit("get", { x: this.x, y: this.y });
+    },
+    fullChunkHandler(chunk) {
+      if (chunk.x === this.x && chunk.y === this.y) {
+        this.data = chunk.data;
+      }
+    },
+    handleClick(piece) {
+      this.activePiece = piece;
     },
     handleKeydown(event, i) {
       event.stopPropagation();
 
       console.log("kd", event);
 
-      // Move forward
-      this.activeChar++;
+      // TODO Move forward
 
       // // If this is a non-modifier, save the character
       // this.queuedChanges.push({
@@ -86,20 +108,20 @@ export default defineComponent({
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="sass">
 
-$size: 32
+$size: 16
 
 .chunk
   position: absolute
-  width: $size * 10px
-  height: $size * 10px
+  width: $size * 20px
+  height: $size * 20px
   left: 0px
   top: 0px
   box-shadow: 0px 0px 0px 1px #555
 
   .char
-    width: 10px
-    height: 10px
-    line-height: 10px
+    width: 20px
+    height: 20px
+    line-height: 20px
     text-align: center
 
     &:hover, &.active
