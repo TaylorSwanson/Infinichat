@@ -10,8 +10,18 @@ import ChunkLoader from "./classes/ChunkLoader";
 
 const port = 10001;
 
+const origins = [
+  "https://infini.chat",
+  "http://infinichat.test:8080"
+];
+
 const server = http.createServer();
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: origins,
+    methods: ["GET", "POST"]
+  }
+});
 
 const location = path.join(
   path.resolve(process.env.STORAGE_PATH),
