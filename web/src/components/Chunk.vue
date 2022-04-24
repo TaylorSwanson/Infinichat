@@ -2,6 +2,7 @@
 .chunk(
   :style="chunkStyle"
 )
+  p {{ created }}
   .char(
     v-for="(char, i) in chars"
     :key="i"
@@ -31,14 +32,16 @@ export default defineComponent({
   props: ["x", "y"],
   data() {
     return {
+      chunk: {},
       activeChar: -1,
       startPosition: -1,
       queuedChanges: [],
       debounceUpdate: debounce(this.update),
       chunkStyle: {
-        top: this.x + "px",
-        left: this.y + "px"
-      }
+        top: this.y * gridSize + "px",
+        left: this.x * gridSize + "px"
+      },
+      created: new Date()
     }
   },
   created() {
@@ -50,9 +53,6 @@ export default defineComponent({
     }),
     chars() {
       return this.chunk?.data?.map(d => d.char);
-    },
-    chunkStyle() {
-      
     }
   },
   methods: {

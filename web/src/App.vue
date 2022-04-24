@@ -8,7 +8,7 @@
   )
     Chunk(
       v-for="chunk in chunks"
-      :key="`${chunk.x}-${chunk.y}`"
+      :key="`${chunk.x}x${chunk.y}`"
       :x="chunk.x"
       :y="chunk.y"
     )
@@ -21,7 +21,7 @@ import Chunk from "@/components/Chunk.vue";
 
 // Number of chars * size of char block
 const gridSize = 16 * 10;
-// Number of tiles to load off screen in each direction
+// Number of chunks to load off screen in each direction
 const offscreenCount = 2;
 
 // Pixels before drag starts
@@ -41,37 +41,61 @@ export default defineComponent({
   data() {
     return {
       dragTarget: null,
-      tilesX: 0,
-      tilesY: 0,
-      tilesStartX: 0,
-      tilesStartY: 0,
+      chunksX: 0,
+      chunksY: 0,
+      chunkStartX: 0,
+      lastChunkStartX: 0,
+      chunkStartY: 0,
+      lastChunkStartY: 0,
       chunks: []
     }
   },
   mounted() {
     this.dragTarget = document.getElementById("dragTarget");
-    this.calcTiles();
-  },
-  computed: {
 
+    // Create the first chunks
+    this.generateChunks();
   },
   methods: {
-    calcTiles() {
-      // Quantity of tiles in each direction
-      this.tilesX = Math.ceil(window.innerWidth / gridSize % gridSize);
-      this.tilesY = Math.ceil(window.innerHeight / gridSize % gridSize);
-      this.tilesStartX = - +this.dragTarget.style.top.slice(0, -2) % gridSize * gridSize;
-      this.tilesStartY = - +this.dragTarget.style.left.slice(0, -2) % gridSize * gridSize;
+    calcChunkCount() {
+      // Quantity of chunks in each direction
+      this.chunksX = Math.ceil(window.innerWidth / gridSize % gridSize);
+      this.chunksY = Math.ceil(window.innerHeight / gridSize % gridSize);
+      this.chunkStartX = Math.floor(- +this.dragTarget.style.left.slice(0, -2) % gridSize);
+      this.chunkStartY = Math.floor(- +this.dragTarget.style.top.slice(0, -2) % gridSize);
+    },
+    generateChunks(skipChunks) {
+      this.calcChunkCount();
 
-      this.chunks = [];
-      for (let i = 0; i < this.tilesY; i++) {
-        for (let j = 0; j < this.tilesX; j++) {
-          this.chunks.push({
-            x: i * gridSize,
-            y: j * gridSize
-          });
+      const startingVal = -(offscreenCount / 2);
+
+      // Fill in remainder of the screen
+      for (let i = startingVal; i < this.chunksY - startingVal; i++) {
+        for (let j = startingVal; j < this.chunksX - startingVal; j++) {
+          // Don't make duplicates
+          if (skipChunks?.find(c => c.x === x && c.y === y)) return;
+
+          this.chunks.push({ x: i, y: j });
         }
       }
+    },
+    // Less demanding way to load chunks and delete old ones
+    // This keeps current chunks in place
+    updateChunks() {
+
+
+      // Add chunks in viewport that don't exist yet
+      this.generateChunks(this.chunks);
+
+      // // Delete chunks not in list
+      // this.chunks.forEach(chunk => {
+      //   if (!keepChunks.includes(chunk)) {
+      //     const idx = this.chunks.indexOf(chunk);
+      //     if (idx === -1) return;
+          
+      //     this.chunks.splice(idx, 1);
+      //   }
+      // });
     },
     dragMouseDown(event) {
       event.preventDefault();
@@ -99,11 +123,11 @@ export default defineComponent({
         return event.preventDefault();
       }
 
-      this.calcTiles();
-
       // set the element's new position:
       this.dragTarget.style.left = (+this.dragTarget.style.left.slice(0, -2) + dx) + "px";
       this.dragTarget.style.top = (+this.dragTarget.style.top.slice(0, -2) + dy) + "px";
+
+      this.updateChunks();
     },
     closeDragElement() {
       document.onmouseup = null;
