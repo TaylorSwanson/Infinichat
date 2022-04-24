@@ -121,6 +121,15 @@ export default createStore({
       chunk.data[index].char = char;
 
       dispatch("translateCursor", { x: 1, y: 0 });
+
+      state.socket.emit("edit", {
+        x,
+        y,
+        start: index,
+        data: {
+          char
+        }
+      });
     }
   },
   modules: {

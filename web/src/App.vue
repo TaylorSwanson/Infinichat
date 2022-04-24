@@ -162,7 +162,9 @@ export default defineComponent({
       ];
       if (ignore.includes(event.keyCode)) return;
 
-      if (event.keyCode === 13) return// this.returnCursor();
+      // Behavior for enter key is to go down
+      if (event.keyCode === 13) return this.translateCursor({ x: 0, y: 1});
+      // Arrow keys
       if (event.keyCode === 37) return this.translateCursor({ x: -1, y: 0 });
       if (event.keyCode === 38) return this.translateCursor({ x: 0, y: -1 });
       if (event.keyCode === 39) return this.translateCursor({ x: 1, y: 0 });
