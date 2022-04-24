@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --host infinichat.test --disable-host-check",
     "build": "vue-cli-service build"
   },
   "dependencies": {
     "axios": "^0.26.1",
     "core-js": "^3.8.3",
     "socket.io-client": "^4.5.0",
+    "v-drag": "^2.1.4",
     "vue": "^3.2.13",
     "vuex": "^4.0.0"
   },
