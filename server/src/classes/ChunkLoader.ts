@@ -7,7 +7,7 @@ import Chunk from "./Chunk";
 import { CharElement } from "../types/CharElement";
 
 // size x size 
-const size = 16;
+const size = 8;
 
 export default class ChunkLoader{
   private chunkCache;

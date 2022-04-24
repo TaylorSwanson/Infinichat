@@ -11,6 +11,7 @@
       :key="`${chunk.x}x${chunk.y}`"
       :x="chunk.x"
       :y="chunk.y"
+      :data="chunk.data"
     )
 </template>
 
@@ -21,7 +22,7 @@ import Chunk from "@/components/Chunk.vue";
 import { mapActions, mapGetters } from "vuex";
 
 // Number of chars * size of char block
-const gridSize = 16 * 20;
+const gridSize = 8 * 20;
 // Number of chunks to load off screen in each direction
 const offscreenCount = 2;
 

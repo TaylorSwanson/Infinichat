@@ -3,7 +3,7 @@
   :style="chunkStyle"
 )
   .char(
-    v-for="(piece, i) in getThisChunk().data"
+    v-for="(piece, i) in data"
     :key="i"
     :class="{ 'active': isChunkActive && i === activePiece.index }"
     @click.native.prevent="handleClick(i)"
@@ -23,12 +23,12 @@ const debounce = (fn, ms = 100) => {
 };
 
 // Side length
-const size = 32;
+const size = 16;
 const gridSize = size * 10;
 
 export default defineComponent({
   name: "Chunk",
-  props: ["x", "y"],
+  props: ["x", "y", "data"],
   data() {
     return {
       // queuedChanges: [],
@@ -36,7 +36,7 @@ export default defineComponent({
       chunkStyle: {
         top: this.y * gridSize + "px",
         left: this.x * gridSize + "px"
-      },
+      }
     }
   },
   created() {
@@ -45,7 +45,6 @@ export default defineComponent({
   methods: {
     ...mapActions({
       setActive: "setActive",
-      getChunk: "getChunk",
     }),
     handleClick(i) {
       this.setActive({
@@ -53,12 +52,6 @@ export default defineComponent({
         y: this.y,
         index: i
       })
-    },
-    getThisChunk() {
-      return this.getChunk({
-        x: this.x,
-        y: this.y
-      });
     }
   },
   computed: {
@@ -75,7 +68,7 @@ export default defineComponent({
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="sass">
 
-$size: 16
+$size: 8
 
 .chunk
   position: absolute
