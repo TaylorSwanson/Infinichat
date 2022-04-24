@@ -1,6 +1,7 @@
 
 import fs from "fs/promises";
 import path from "path";
+import { EventEmitter } from "events";
 
 import md5 from "~/utils/md5";
 import { CharElement } from "~/types/CharElement";
@@ -21,7 +22,7 @@ const debounce = (fn: Function, ms = 300) => {
   };
 };
 
-export default class Chunk {
+export default class Chunk extends EventEmitter {
   public x: number;
   public y: number;
   public lastModified: Date;
@@ -32,6 +33,8 @@ export default class Chunk {
   private saveDebounced: Function;
 
   public constructor(data: ChunkElement, storagePath: string) {
+    super();
+
     this.x = data.x;
     this.y = data.y;
     this.lastModified = data.lastModified;
@@ -69,7 +72,11 @@ export default class Chunk {
       this.data[start + i] = char;
     });
 
+    this.lastModified = new Date();
     this.checksum = md5(JSON.stringify(this.data));
+
+    // Someone may be listening
+    this.emit("update", this);
 
     this.saveDebounced();
   }

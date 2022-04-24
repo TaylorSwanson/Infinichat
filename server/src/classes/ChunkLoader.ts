@@ -79,7 +79,7 @@ export default class ChunkLoader{
     });
   }
 
-  public async loadChunk(x: number, y: number) {
+  public async getChunk(x: number, y: number) {
     x = Math.round(x);
     y = Math.round(y);
     const hash = md5(`${x}-${y}`);
