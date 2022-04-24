@@ -2,6 +2,7 @@
 .drag-container(
   @mousedown="dragMouseDown"
   @mouseup="closeDragElement"
+  @keydown.native.prevent="handleKeydown"
 )
   .chunk-container(
     id="dragTarget"
@@ -147,6 +148,9 @@ export default defineComponent({
     closeDragElement() {
       document.onmouseup = null;
       document.onmousemove = null;
+    },
+    handleKeydown(event) {
+      console.log("kd", event);
     }
   },
   watch: {

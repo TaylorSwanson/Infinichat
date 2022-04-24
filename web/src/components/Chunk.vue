@@ -5,14 +5,14 @@
   .char(
     v-for="(piece, i) in data"
     :key="i"
-    :class="{ 'active': piece === activePiece }"
-    @keydown.native.prevent="handleKeydown($event, piece)"
+    :class="{ 'active': isChunkActive && i === activePiece.index }"
+    @click.native.prevent="handleClick(i)"
   ) {{ piece.char }}
 </template>
 
 <script>
 import { defineComponent } from "vue";
-import { mapGetters } from "vuex";
+import { mapActions, mapGetters } from "vuex";
 
 const debounce = (fn, ms = 100) => {
   let timeoutId;
@@ -32,7 +32,6 @@ export default defineComponent({
   data() {
     return {
       data: [],
-      activePiece: {},
       queuedChanges: [],
       debounceUpdate: debounce(this.update),
       chunkStyle: {
@@ -65,13 +64,20 @@ export default defineComponent({
   computed: {
     ...mapGetters({
       socket: "getSocket",
-      isConnected: "isConnected"
+      isConnected: "isConnected",
+      activePiece: "activePiece"
     }),
     chars() {
       return this.chunk?.data?.map(d => d.char);
+    },
+    isChunkActive() {
+      return this.activePiece.x === this.x && this.activePiece.y === this.y;
     }
   },
   methods: {
+    ...mapActions({
+      setActive: "setActive"
+    }),
     initialSetup() {
       this.socket.on("fullChunk", this.fullChunkHandler);
       this.socket.emit("get", { x: this.x, y: this.y });
@@ -81,25 +87,12 @@ export default defineComponent({
         this.data = chunk.data;
       }
     },
-    handleClick(piece) {
-      this.activePiece = piece;
-    },
-    handleKeydown(event, i) {
-      event.stopPropagation();
-
-      console.log("kd", event);
-
-      // TODO Move forward
-
-      // // If this is a non-modifier, save the character
-      // this.queuedChanges.push({
-      //   i,
-      //   char
-      // })
-      // this.debounceUpdate();
-    },
-    update() {
-      this.queuedChanges = [];
+    handleClick(i) {
+      this.setActive({
+        x: this.x,
+        y: this.y,
+        index: i
+      })
     }
   }
 });
@@ -116,15 +109,23 @@ $size: 16
   height: $size * 20px
   left: 0px
   top: 0px
-  box-shadow: 0px 0px 0px 1px #555
+  overflow: hidden
 
   .char
     width: 20px
     height: 20px
+    overflow: hidden
     line-height: 20px
     text-align: center
+    display: inline-block
+    float: left
 
-    &:hover, &.active
-      box-shadow: 0px 0px 0px 1px inset rgba(#000, 0.1)
+    &:hover
+      box-shadow: 0px 0px 0px 1px inset rgba(#000, 0.4)
+
+    &.active
+      background-color: #F2F5F9
+
+    
 
 </style>

@@ -5,6 +5,11 @@ export default createStore({
   state: {
     socket: null,
     isConnected: false,
+    activePiece: {
+      x: 0,
+      y: 0,
+      index: 0
+    }
   },
   getters: {
     getSocket: state => {
@@ -12,6 +17,9 @@ export default createStore({
     },
     isConnected: state => {
       return state.isConnected;
+    },
+    activePiece: state => {
+      return state.activePiece;
     }
   },
   mutations: {
@@ -31,6 +39,13 @@ export default createStore({
 
 
       state.socket = socket;
+    },
+    setActive({ state }, payload) {
+      state.activePiece = {
+        x: payload.x,
+        y: payload.y,
+        index: payload.index
+      };
     }
   },
   modules: {
