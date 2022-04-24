@@ -5,8 +5,8 @@ import fs from "fs";
 
 import { Server } from "socket.io";
 
-import ChunkLoader from "~/classes/ChunkLoader";
-import ClientHandler from "~/classes/ClientHandler";
+import ClientHandler from "./classes/ClientHandler";
+import ChunkLoader from "./classes/ChunkLoader";
 
 const port = 10001;
 
@@ -41,6 +41,7 @@ function main() {
   });
   
   server.listen(port);
+  console.log(`Listening on port ${port}`);
 }
 
 main();

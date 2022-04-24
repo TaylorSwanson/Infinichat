@@ -3,8 +3,8 @@ import fs from "fs/promises";
 import path from "path";
 import { EventEmitter } from "events";
 
-import md5 from "~/utils/md5";
-import { CharElement } from "~/types/CharElement";
+import md5 from "../utils/md5";
+import { CharElement } from "../types/CharElement";
 
 type ChunkElement = {
   x: number,

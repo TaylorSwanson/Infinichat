@@ -1,5 +1,5 @@
 
-import Chunk from "~/classes/Chunk";
+import Chunk from "./Chunk";
 
 export default class ClientHandler{
   private socket;

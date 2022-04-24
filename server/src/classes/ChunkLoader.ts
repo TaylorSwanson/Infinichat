@@ -2,9 +2,9 @@
 import fs from "fs/promises";
 import path from "path";
 
-import md5 from "~/utils/md5";
-import Chunk from "~/classes/Chunk";
-import { CharElement } from "~/types/CharElement";
+import md5 from "../utils/md5";
+import Chunk from "./Chunk";
+import { CharElement } from "../types/CharElement";
 
 // size x size 
 const size = 16;
