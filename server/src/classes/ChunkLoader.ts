@@ -10,7 +10,7 @@ import { CharElement } from "../types/CharElement";
 const size = 16;
 
 export default class ChunkLoader{
-  private chunkCache = {};
+  private chunkCache;
   private timeout: number;
   private storagePath: string;
   private purgeInterval;
@@ -18,6 +18,7 @@ export default class ChunkLoader{
   constructor(storagePath, timeout = 300) {
     this.storagePath = storagePath;
     this.timeout = timeout * 1000;
+    this.chunkCache = {};
     
     this.purgeInterval = setInterval(this.purge, 15 * 1000);
   }
@@ -44,7 +45,14 @@ export default class ChunkLoader{
 
       console.log(`Loaded chunk ${x}-${y}`)
 
-      return new Chunk(json, this.storagePath);
+      const chunk = new Chunk(json, this.storagePath);
+
+      // Cache since this chunk exists
+      const idx = this.chunkCache.indexOf(chunk);
+      if (idx !== -1) return;
+      this.chunkCache.push(chunk);
+
+      return chunk;
 
     } catch (e) {
       // Probably doesn't exist, create empty chunk
@@ -55,18 +63,31 @@ export default class ChunkLoader{
       });
 
       console.log(`New chunk loaded at ${x}-${y}`);
-
-      return new Chunk({
+      
+      const chunk = new Chunk({
         x,
         y,
         lastModified: new Date(),
         data,
         checksum: md5(data)
       }, this.storagePath);
+
+      chunk.once("edit", async () => {
+        // Cache this new chunk since it now has meaning (not empty)
+        const idx = this.chunkCache.indexOf(chunk);
+        if (idx !== -1) return;
+
+        this.chunkCache.push(chunk);
+        await chunk.save();
+      });
+
+      return chunk;
     }
   }
 
   private async purge() {
+    if (!this.chunkCache) return;
+
     const keys = Object.keys(this.chunkCache);
     const now = Date.now();
 

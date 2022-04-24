@@ -4,18 +4,19 @@
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import $axios from "@/classes/$axios";
 
 import Block from "@/components/Block.vue";
 
 export default defineComponent({
   name: "App",
+  data() {
+    return {
+      
+    }
+  },
   components: {
     Block
   },
-  methods: {
-    $axios,
-  }
 });
 </script>
 

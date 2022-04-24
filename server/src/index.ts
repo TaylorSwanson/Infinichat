@@ -13,12 +13,16 @@ const port = 10001;
 const server = http.createServer();
 const io = new Server(server);
 
-const location = path.join(process.env.STORAGE_PATH ?? __dirname, "chunks");
-fs.mkdirSync(location, { recursive: true });
+const location = path.join(
+  path.resolve(process.env.STORAGE_PATH),
+  "chunks"
+);
 
 const clients = [];
 
 function main() {
+  fs.mkdirSync(location, { recursive: true });
+
   const chunkLoader = new ChunkLoader(location);
   
   // Watch for incoming ws connections, events handled by ClientHandler
@@ -41,7 +45,7 @@ function main() {
   });
   
   server.listen(port);
-  console.log(`Listening on port ${port}`);
+  console.log(`Listening on port ${port} and saving at ${location}`);
 }
 
 main();
