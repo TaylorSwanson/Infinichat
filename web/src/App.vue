@@ -6,22 +6,26 @@
   .chunk-container(
     id="dragTarget"
   )
-    p ASDF
     Chunk(
       v-for="chunk in chunks"
       :key="`${chunk.x}-${chunk.y}`"
-      :chunk="chunk"
+      :x="chunk.x"
+      :y="chunk.y"
     )
 </template>
 
-<script lang="ts">
+<script>
 import { defineComponent } from "vue";
 
 import Chunk from "@/components/Chunk.vue";
 
+// Number of chars * size of char block
+const gridSize = 16 * 10;
+// Number of tiles to load off screen in each direction
+const offscreenCount = 2;
+
 // Pixels before drag starts
 const dragThreshold = 3;
-
 let lastX = 0;
 let lastY = 0;
 
@@ -36,15 +40,39 @@ export default defineComponent({
   name: "App",
   data() {
     return {
-      
+      dragTarget: null,
+      tilesX: 0,
+      tilesY: 0,
+      tilesStartX: 0,
+      tilesStartY: 0,
+      chunks: []
     }
+  },
+  mounted() {
+    this.dragTarget = document.getElementById("dragTarget");
+    this.calcTiles();
   },
   computed: {
-    chunks() {
-      return [];
-    }
+
   },
   methods: {
+    calcTiles() {
+      // Quantity of tiles in each direction
+      this.tilesX = Math.ceil(window.innerWidth / gridSize % gridSize);
+      this.tilesY = Math.ceil(window.innerHeight / gridSize % gridSize);
+      this.tilesStartX = - +this.dragTarget.style.top.slice(0, -2) % gridSize * gridSize;
+      this.tilesStartY = - +this.dragTarget.style.left.slice(0, -2) % gridSize * gridSize;
+
+      this.chunks = [];
+      for (let i = 0; i < this.tilesY; i++) {
+        for (let j = 0; j < this.tilesX; j++) {
+          this.chunks.push({
+            x: i * gridSize,
+            y: j * gridSize
+          });
+        }
+      }
+    },
     dragMouseDown(event) {
       event.preventDefault();
 
@@ -71,11 +99,11 @@ export default defineComponent({
         return event.preventDefault();
       }
 
-      const dragTarget = document.getElementById("dragTarget") as HTMLElement;
+      this.calcTiles();
 
       // set the element's new position:
-      dragTarget.style.left = (+dragTarget.style.left.slice(0, -2) + dx) + "px";
-      dragTarget.style.top = (+dragTarget.style.top.slice(0, -2) + dy) + "px";
+      this.dragTarget.style.left = (+this.dragTarget.style.left.slice(0, -2) + dx) + "px";
+      this.dragTarget.style.top = (+this.dragTarget.style.top.slice(0, -2) + dy) + "px";
     },
     closeDragElement() {
       document.onmouseup = null;
@@ -84,13 +112,17 @@ export default defineComponent({
   },
   components: {
     Chunk
-  },
+  }
 });
 </script>
 
 <style lang="sass">
-#app
+html, body 
+  padding: 0px
+  margin: 0px
   font-family: "Inconsolata", monospace
+
+// #app
 
 .drag-container
   width: 100vw
@@ -100,10 +132,12 @@ export default defineComponent({
   left:0px
   position: relative
 
-.chunk-container
-  position: absolute
-  top: 0px
-  right: 0px
-  bottom: 0px
-  left: 0px
+  .chunk-container
+    position: absolute
+    top: 0px
+    right: 0px
+    bottom: 0px
+    left: 0px
+
+
 </style>
