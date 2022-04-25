@@ -8,7 +8,9 @@ import { CharElement } from "../types/CharElement";
 
 // size x size 
 const size = 8;
-const purgeSeconds = 20;
+const purgeIntervalSeconds = 20;
+
+const loadingHashes = [];
 
 export default class ChunkLoader{
   private chunkCache;
@@ -21,7 +23,7 @@ export default class ChunkLoader{
     this.timeout = timeout * 1000;
     this.chunkCache = {};
     
-    this.purgeInterval = setInterval(this.purge, purgeSeconds * 1000);
+    this.purgeInterval = setInterval(this.purge, purgeIntervalSeconds * 1000);
   }
 
   private async load(x: number, y: number) {
@@ -29,12 +31,21 @@ export default class ChunkLoader{
     const location = path.join(this.storagePath, hash);
 
     try {
-      console.log(`Loading chunk from file: ${location}, ${x}x${y}`);
+      // Prevent race conditions where block is requested during loading
+      if (loadingHashes.includes(hash)) return;
+      loadingHashes.push(hash);
+
       const handle = await fs.open(location, "r");
       const content = (await handle.readFile()).toString();
       await handle.close();
 
-      console.log(`Loaded chunk: ${location}, ${x}x${y}`);
+      // Remove loading hash
+      const idx = loadingHashes.indexOf(hash);
+      if (idx !== -1) {
+        loadingHashes.splice(idx, 1);
+      }
+
+      console.log(`Loaded chunk from file: ${location}, ${x}x${y}`);
 
       const json = JSON.parse(content);
       const check = md5(JSON.stringify(json.data));

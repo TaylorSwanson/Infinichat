@@ -34,7 +34,7 @@ const clients = [];
 function main() {
   fs.mkdirSync(location, { recursive: true });
 
-  const chunkLoader = new ChunkLoader(location);
+  const chunkLoader = new ChunkLoader(location, 10);
   
   // Watch for incoming ws connections, events handled by ClientHandler
   io.on("connection", client => {
