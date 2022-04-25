@@ -6,6 +6,9 @@ import { EventEmitter } from "events";
 import md5 from "../utils/md5";
 import { CharElement } from "../types/CharElement";
 
+// Seconds between saves
+const saveDebouncedInterval = 10;
+
 type ChunkElement = {
   x: number,
   y: number,
@@ -43,7 +46,7 @@ export default class Chunk extends EventEmitter {
     this.checksum = initial.checksum;
 
     this.storagePath = storagePath;
-    this.saveDebounced = debounce(this.save, 1000);
+    this.saveDebounced = debounce(this.save, saveDebouncedInterval * 1000);
   }
 
   public async save() {

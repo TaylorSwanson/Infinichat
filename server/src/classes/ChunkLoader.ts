@@ -99,7 +99,7 @@ export default class ChunkLoader{
 
       const chunkDate = this.chunkCache[k].lastModified as Date;
       if (now - chunkDate.getTime() >= this.timeout) {
-        console.log(`Purging chunk ${k}...`);
+        console.log(`Unloading chunk ${k}...`);
         await this.chunkCache[k].save();
         delete this.chunkCache[k];
       }
@@ -113,7 +113,6 @@ export default class ChunkLoader{
 
     // Check for cache hit
     if (this.chunkCache.hasOwnProperty(hash)) {
-      console.log(`Cache hit ${x}x${y}`);
       return this.chunkCache[hash];
     }
 

@@ -84,11 +84,11 @@ export default class ClientHandler{
         return;
       }
 
-      const data = [{
+      const data = {
         char,
         color: "",
         author: this.socket.id
-      }];
+      };
 
       const chunk = await this.chunkLoader.getChunk(x, y);
       chunk.edit(index, data, this.socket.id);
