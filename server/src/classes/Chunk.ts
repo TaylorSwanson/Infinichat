@@ -33,14 +33,14 @@ export default class Chunk extends EventEmitter {
   private storagePath: string;
   private saveDebounced: Function;
 
-  public constructor(data: ChunkElement, storagePath: string) {
+  public constructor(initial: ChunkElement, storagePath: string) {
     super();
 
-    this.x = data.x;
-    this.y = data.y;
-    this.lastModified = data.lastModified;
-    this.data = data.data;
-    this.checksum = data.checksum;
+    this.x = initial.x;
+    this.y = initial.y;
+    this.lastModified = initial.lastModified;
+    this.data = initial.data;
+    this.checksum = initial.checksum;
 
     this.storagePath = storagePath;
     this.saveDebounced = debounce(this.save, 1000);
@@ -76,12 +76,13 @@ export default class Chunk extends EventEmitter {
     this.lastModified = new Date();
     this.checksum = md5(JSON.stringify(this.data));
 
-    // Someone may be listening
     this.emit("edit", {
       x: this.x,
       y: this.y,
       index,
-      char
+      char,
+      time: Date.now(),
+      editorId
     });
 
     this.saveDebounced();

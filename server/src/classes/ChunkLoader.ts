@@ -29,11 +29,12 @@ export default class ChunkLoader{
     const location = path.join(this.storagePath, hash);
 
     try {
+      console.log(`Loading chunk from file: ${location}, ${x}x${y}`);
       const handle = await fs.open(location, "r");
       const content = (await handle.readFile()).toString();
       await handle.close();
 
-      console.log(`Loading chunk from file: ${location}, ${x}x${y}`);
+      console.log(`Loaded chunk: ${location}, ${x}x${y}`);
 
       const json = JSON.parse(content);
       const check = md5(JSON.stringify(json.data));
@@ -47,7 +48,7 @@ export default class ChunkLoader{
         return await this.load(x, y);
       }
 
-      console.log(`Loaded chunk ${x}x${y}`);
+      console.log(`Loaded chunk ${x}x${y} from file`);
 
       const chunk = new Chunk(json, this.storagePath);
 
@@ -60,11 +61,10 @@ export default class ChunkLoader{
       // Probably doesn't exist, create empty chunk
       const data: Array<CharElement> = new Array(size * size).fill({
         char: "",
-        color: null,
-        author: null
+        color: "",
+        author: ""
       });
 
-      console.log(`New chunk created at ${x}x${y}`);
       
       const chunk = new Chunk({
         x,
@@ -73,13 +73,14 @@ export default class ChunkLoader{
         data,
         checksum: md5(JSON.stringify(data))
       }, this.storagePath);
+      
+      console.log(`New chunk created at ${x}x${y}`);
 
       // Just catch edit, don't do edits here
       // Cache this new chunk since it now has meaning (not empty)
       chunk.once("edit", async () => {
-        if (this.chunkCache[hash]) return;
-
-        this.chunkCache[hash] = chunk;
+        console.log(`Chunk ${x}x${y} edited, triggering save...`);
+        chunk.lastModified = new Date();
         await chunk.save();
       });
 
@@ -94,12 +95,12 @@ export default class ChunkLoader{
     const now = Date.now();
 
     keys.forEach(async k => {
-      if (this.chunkCache[k].subscribers > 0) return;
+      if (this.chunkCache[k].subscribers ?? 0 > 0) return;
 
       const chunkDate = this.chunkCache[k].lastModified as Date;
       if (now - chunkDate.getTime() >= this.timeout) {
         console.log(`Purging chunk ${k}...`);
-        await this.chunkCache[k].save(this.storagePath);
+        await this.chunkCache[k].save();
         delete this.chunkCache[k];
       }
     });
