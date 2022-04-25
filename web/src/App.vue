@@ -156,12 +156,18 @@ export default defineComponent({
     handleKeydown(event) {
       // Ignore modifiers
       const ignore = [
-        8, 9, 16, 17, 18, 19, 20, 27, 33, 34, 224,
+        9, 16, 17, 18, 19, 20, 27, 33, 34, 224,
         35, 36, 45, 46, 91, 92, 93, 106, 107, 109,
         110, 111, 144, 145
       ];
       if (ignore.includes(event.keyCode)) return;
 
+      // Backspace
+      if (event.keyCode === 8) {
+        this.translateCursor({ x: -1, y: 0 });
+        this.placeChar("");
+        return;
+      }
       // Behavior for enter key is to go down
       if (event.keyCode === 13) return this.translateCursor({ x: 0, y: 1});
       // Arrow keys

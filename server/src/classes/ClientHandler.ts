@@ -1,6 +1,9 @@
 
 import Chunk from "./Chunk";
 
+// size x size 
+const size = 8;
+
 export default class ClientHandler{
   private socket;
   private chunkLoader;
@@ -74,11 +77,23 @@ export default class ClientHandler{
       delete this.subscriptions[key];
     });
 
-    this.socket.on("edit", payload => {
-      const { x, y, start, data } = payload;
+    this.socket.on("edit", async payload => {
+      let { x, y, index, char } = payload;
 
-      const chunk = this.chunkLoader.get(x, y);
-      chunk.edit(start, data, this.socket.id);
+      char = char.trim().slice(0, 1);
+      
+      if (index < 0 || index > size * size) {
+        return;
+      }
+
+      const data = [{
+        char,
+        color: "",
+        author: this.socket.id
+      }];
+
+      const chunk = await this.chunkLoader.load(x, y);
+      chunk.edit(index, data, this.socket.id);
     });
 
     this.socket.on("disconnect", () => {

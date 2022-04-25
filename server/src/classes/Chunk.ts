@@ -68,18 +68,18 @@ export default class Chunk extends EventEmitter {
     }
   }
 
-  public edit(start: number, data: Array<CharElement>, editorId?: string) {
-    data.forEach((char, i) => {
-      this.data[start + i] = char;
-    });
+  public edit(index: number, char: CharElement, editorId?: string) {
+    this.data[index] = char;
 
     this.lastModified = new Date();
     this.checksum = md5(JSON.stringify(this.data));
 
     // Someone may be listening
     this.emit("edit", {
-      chunk: this,
-      editorId
+      x: this.x,
+      y: this.y,
+      index,
+      char
     });
 
     this.saveDebounced();

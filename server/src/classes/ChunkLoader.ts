@@ -48,9 +48,8 @@ export default class ChunkLoader{
       const chunk = new Chunk(json, this.storagePath);
 
       // Cache since this chunk exists
-      const idx = this.chunkCache.indexOf(chunk);
-      if (idx !== -1) return;
-      this.chunkCache.push(chunk);
+      if (this.chunkCache[hash]) return this.chunkCache[hash];
+      this.chunkCache[hash] = chunk;
 
       return chunk;
 
@@ -75,10 +74,9 @@ export default class ChunkLoader{
       // Just catch edit, don't do edits here
       // Cache this new chunk since it now has meaning (not empty)
       chunk.once("edit", async () => {
-        const idx = this.chunkCache.indexOf(chunk);
-        if (idx !== -1) return;
+        if (this.chunkCache[hash]) return;
 
-        this.chunkCache.push(chunk);
+        this.chunkCache[hash] = chunk;
         await chunk.save();
       });
 

@@ -125,10 +125,8 @@ export default createStore({
       state.socket.emit("edit", {
         x,
         y,
-        start: index,
-        data: {
-          char
-        }
+        index,
+        char
       });
     }
   },
