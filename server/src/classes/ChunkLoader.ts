@@ -8,6 +8,7 @@ import { CharElement } from "../types/CharElement";
 
 // size x size 
 const size = 8;
+const purgeSeconds = 20;
 
 export default class ChunkLoader{
   private chunkCache;
@@ -20,7 +21,7 @@ export default class ChunkLoader{
     this.timeout = timeout * 1000;
     this.chunkCache = {};
     
-    this.purgeInterval = setInterval(this.purge, 15 * 1000);
+    this.purgeInterval = setInterval(this.purge, purgeSeconds * 1000);
   }
 
   private async load(x: number, y: number) {
@@ -30,6 +31,9 @@ export default class ChunkLoader{
     try {
       const handle = await fs.open(location, "r");
       const content = (await handle.readFile()).toString();
+      await handle.close();
+
+      console.log(`Loading chunk from file: ${location}, ${x}x${y}`);
 
       const json = JSON.parse(content);
       const check = md5(JSON.stringify(json.data));
@@ -52,7 +56,6 @@ export default class ChunkLoader{
       this.chunkCache[hash] = chunk;
 
       return chunk;
-
     } catch (e) {
       // Probably doesn't exist, create empty chunk
       const data: Array<CharElement> = new Array(size * size).fill({
@@ -61,7 +64,7 @@ export default class ChunkLoader{
         author: null
       });
 
-      console.log(`New chunk loaded at ${x}x${y}`);
+      console.log(`New chunk created at ${x}x${y}`);
       
       const chunk = new Chunk({
         x,
@@ -95,6 +98,7 @@ export default class ChunkLoader{
 
       const chunkDate = this.chunkCache[k].lastModified as Date;
       if (now - chunkDate.getTime() >= this.timeout) {
+        console.log(`Purging chunk ${k}...`);
         await this.chunkCache[k].save(this.storagePath);
         delete this.chunkCache[k];
       }
@@ -108,6 +112,7 @@ export default class ChunkLoader{
 
     // Check for cache hit
     if (this.chunkCache.hasOwnProperty(hash)) {
+      console.log(`Cache hit ${x}x${y}`);
       return this.chunkCache[hash];
     }
 

@@ -50,6 +50,8 @@ export default class Chunk extends EventEmitter {
     const hash = md5(`${this.x}-${this.y}`);
     const location = path.join(this.storagePath, hash);
 
+    console.log(`Saving chunk ${this.x}x${this.y} at ${location}`);
+
     this.lastModified = new Date();
     this.checksum = md5(JSON.stringify(this.data));
 

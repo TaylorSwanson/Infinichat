@@ -27,8 +27,6 @@ export default class ClientHandler{
     this.socket.on("get", async data => {
       const { x, y } = data;
 
-      console.log("Getting", x, y);
-
       const chunk = await this.chunkLoader.getChunk(x, y);
       socket.emit("fullChunk", chunk.get());
     });
@@ -40,7 +38,7 @@ export default class ClientHandler{
       // Don't subscribe multiple times
       if (this.subscriptions[key]) return;
 
-      console.log("Subscribing", x, y);
+      // console.log("Subscribing", x, y);
 
       // Eliminate race condition between rapid subscribe/unsubscribe
       if (this.subscriptionsInProgress.find(s => s === key)) return;
@@ -71,7 +69,7 @@ export default class ClientHandler{
         this.subscriptions[key].subscribers--;
       }
 
-      console.log("Unsubscribing", x, y);
+      // console.log("Unsubscribing", x, y);
 
       // Unref
       delete this.subscriptions[key];
@@ -92,7 +90,7 @@ export default class ClientHandler{
         author: this.socket.id
       }];
 
-      const chunk = await this.chunkLoader.load(x, y);
+      const chunk = await this.chunkLoader.getChunk(x, y);
       chunk.edit(index, data, this.socket.id);
     });
 
