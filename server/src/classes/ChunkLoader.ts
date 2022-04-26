@@ -34,7 +34,7 @@ export default class ChunkLoader{
 
     try {
       // Prevent race conditions where block is requested during loading
-      if (loadingHashes.includes(hash)) return false;
+      if (loadingHashes.includes(hash)) return;
       loadingHashes.push(hash);
 
       const handle = await fs.open(location, "r");
@@ -71,17 +71,24 @@ export default class ChunkLoader{
 
       return chunk;
     } catch (e) {
+      // Remove loading hash, since this is a new chunk
+      const idx = loadingHashes.indexOf(hash);
+      if (idx !== -1) {
+        loadingHashes.splice(idx, 1);
+      }
+
       // Probably doesn't exist, create empty chunk
       const data: Array<CharElement> = new Array(size * size).fill({
         char: "",
         color: "",
-        author: ""
+        author: "",
+        timestamp: Date.now()
       });
 
       const chunk = new Chunk({
         x,
         y,
-        lastModified: new Date(),
+        lastModified: Date.now(),
         data,
         checksum: md5(JSON.stringify(data))
       }, this.storagePath);
@@ -103,8 +110,7 @@ export default class ChunkLoader{
     keys.forEach(async k => {
       if (this.chunkCache[k].subscribers ?? 0 > 0) return;
 
-      const chunkDate = this.chunkCache[k].lastModified as Date;
-      if (now - chunkDate.getTime() >= this.timeout) {
+      if (now - this.chunkCache[k].lastModified >= this.timeout) {
         console.log(`Unloading chunk ${k}...`);
         await this.chunkCache[k].save();
         delete this.chunkCache[k];

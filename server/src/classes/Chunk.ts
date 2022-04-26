@@ -12,7 +12,7 @@ const saveDebouncedInterval = 10;
 type ChunkElement = {
   x: number,
   y: number,
-  lastModified: Date,
+  lastModified: number,
   data: Array<CharElement>,
   checksum: string
 };
@@ -29,7 +29,7 @@ export default class Chunk extends EventEmitter {
   public x: number;
   public y: number;
   public subscribers = 0;
-  public lastModified: Date;
+  public lastModified: number;
   public data: Array<CharElement>;
   public checksum: string;
 
@@ -55,7 +55,6 @@ export default class Chunk extends EventEmitter {
 
     console.log(`Saving chunk ${this.x}x${this.y} at ${location}`);
 
-    this.lastModified = new Date();
     this.checksum = md5(JSON.stringify(this.data));
 
     const saveData = JSON.stringify({
@@ -76,7 +75,7 @@ export default class Chunk extends EventEmitter {
   public edit(index: number, char: CharElement, editorId?: string) {
     this.data[index] = char;
 
-    this.lastModified = new Date();
+    this.lastModified = Date.now();
     this.checksum = md5(JSON.stringify(this.data));
 
     this.emit("edit", {
