@@ -32,4 +32,4 @@ USER nonroot
 EXPOSE 10001
 
 ENV NODE_ENV=production
-CMD [ "node", "./dist/api" ]
+CMD [ "node", "./dist" ]
