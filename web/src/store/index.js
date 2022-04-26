@@ -49,7 +49,7 @@ export default createStore({
       state.socket.emit("unsubscribe", { x, y });
       state.chunks.splice(idx, 1);
     },
-    connect({ state }) {
+    connect({ state, dispatch }) {
       const socket = io(process.env.VUE_APP_API_URL);
 
       socket.on("connect", () => {
@@ -61,8 +61,15 @@ export default createStore({
           chunk.data = fullChunk.data;
         });
 
-        socket.on("edit", (changes) => {
-          
+        socket.on("edit", async (changes) => {
+          const chunk = await dispatch("getChunk", ({
+            x: changes.x, y: changes.y
+          }));
+          if (!chunk) return;
+
+          changes.char.char = changes.char?.char?.trim().slice(0, 1) ?? "";
+
+          chunk.data[changes.index] = changes.char;
         });
       });
 

@@ -17,11 +17,11 @@ export default class ClientHandler{
     this.chunkLoader = chunkLoader;
 
     // Handles edit events from chunks
-    this.editListenerHandler = (chunkPayload) => {
+    this.editListenerHandler = (editPayload) => {
       // Don't send change to editor (ourselves)
-      if (chunkPayload.editorId === socket.id) return;
+      if (editPayload.editorId === socket.id) return;
 
-      socket.emit("edit", { chunk: chunkPayload.chunk });
+      socket.emit("edit", { ...editPayload });
     }
 
     this.socket.on("get", async data => {
@@ -78,7 +78,7 @@ export default class ClientHandler{
     this.socket.on("edit", async payload => {
       let { x, y, index, char } = payload;
 
-      char = char.trim().slice(0, 1);
+      char = char?.trim().slice(0, 1) ?? "";
       
       if (index < 0 || index > size * size) {
         return;

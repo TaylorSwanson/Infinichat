@@ -16,6 +16,9 @@ const origins = [
   "http://infinichat.test:8080"
 ];
 
+// There will be a lot of listeners
+process.setMaxListeners(0);
+
 const server = http.createServer();
 const io = new Server(server, {
   cors: {
