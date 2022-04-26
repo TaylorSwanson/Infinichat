@@ -14,7 +14,8 @@ type ChunkElement = {
   y: number,
   lastModified: number,
   data: Array<CharElement>,
-  checksum: string
+  checksum: string,
+  isNew?: boolean
 };
 
 const debounce = (fn: Function, ms = 300) => {
@@ -32,6 +33,7 @@ export default class Chunk extends EventEmitter {
   public lastModified: number;
   public data: Array<CharElement>;
   public checksum: string;
+  public isNew: boolean;
 
   private storagePath: string;
   private saveDebounced: Function;
@@ -44,12 +46,16 @@ export default class Chunk extends EventEmitter {
     this.lastModified = initial.lastModified;
     this.data = initial.data;
     this.checksum = initial.checksum;
+    this.isNew = initial.isNew;
 
     this.storagePath = storagePath;
     this.saveDebounced = debounce(this.save, saveDebouncedInterval * 1000);
   }
 
   public async save() {
+    // Don't save empty chunks
+    if (this.isNew) return;
+
     const hash = md5(`${this.x}x${this.y}`);
     const location = path.join(this.storagePath, hash);
 
@@ -62,7 +68,8 @@ export default class Chunk extends EventEmitter {
       y: this.y,
       lastModified: this.lastModified,
       data: this.data,
-      checksum: this.checksum
+      checksum: this.checksum,
+      isNew: this.isNew ?? false
     });
 
     try {
@@ -77,6 +84,8 @@ export default class Chunk extends EventEmitter {
 
     this.lastModified = Date.now();
     this.checksum = md5(JSON.stringify(this.data));
+
+    delete this.isNew;
 
     this.emit("edit", {
       x: this.x,

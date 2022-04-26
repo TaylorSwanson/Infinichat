@@ -8,7 +8,7 @@ import { CharElement } from "../types/CharElement";
 
 // size x size 
 const size = 8;
-const purgeIntervalSeconds = 20;
+const purgeIntervalSeconds = 10;
 
 // This prevents a loading race condition (subscribe + get, for example)
 // Hashes of chunks currently loading
@@ -20,12 +20,14 @@ export default class ChunkLoader{
   private storagePath: string;
   private purgeInterval;
 
-  constructor(storagePath, timeout = 300) {
+  constructor(storagePath, timeout = 60) {
     this.storagePath = storagePath;
     this.timeout = timeout * 1000;
     this.chunkCache = {};
     
-    this.purgeInterval = setInterval(this.purge, purgeIntervalSeconds * 1000);
+    this.purgeInterval = setInterval(() => {
+      this.purge();
+    }, purgeIntervalSeconds * 1000);
   }
 
   private async load(x: number, y: number) {
@@ -90,7 +92,8 @@ export default class ChunkLoader{
         y,
         lastModified: Date.now(),
         data,
-        checksum: md5(JSON.stringify(data))
+        checksum: md5(JSON.stringify(data)),
+        isNew: true
       }, this.storagePath);
       
       console.log(`New chunk created at ${x}x${y}`);
@@ -101,9 +104,8 @@ export default class ChunkLoader{
     }
   }
 
+  // Remove old chunks
   private async purge() {
-    if (!this.chunkCache) return;
-
     const keys = Object.keys(this.chunkCache);
     const now = Date.now();
 

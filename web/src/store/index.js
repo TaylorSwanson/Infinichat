@@ -60,6 +60,10 @@ export default createStore({
 
           chunk.data = fullChunk.data;
         });
+
+        socket.on("edit", (changes) => {
+          
+        });
       });
 
       socket.on("disconnect", () => {

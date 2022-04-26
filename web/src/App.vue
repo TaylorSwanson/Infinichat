@@ -164,8 +164,9 @@ export default defineComponent({
 
       // Backspace
       if (event.keyCode === 8) {
-        this.translateCursor({ x: -1, y: 0 });
         this.placeChar("");
+        this.translateCursor({ x: -1, y: 0 });
+        this.translateCursor({ x: -1, y: 0 });
         return;
       }
       // Behavior for enter key is to go down
