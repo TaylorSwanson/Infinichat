@@ -10,6 +10,8 @@ import { CharElement } from "../types/CharElement";
 const size = 8;
 const purgeIntervalSeconds = 20;
 
+// This prevents a loading race condition (subscribe + get, for example)
+// Hashes of chunks currently loading
 const loadingHashes = [];
 
 export default class ChunkLoader{
@@ -32,7 +34,7 @@ export default class ChunkLoader{
 
     try {
       // Prevent race conditions where block is requested during loading
-      if (loadingHashes.includes(hash)) return;
+      if (loadingHashes.includes(hash)) return false;
       loadingHashes.push(hash);
 
       const handle = await fs.open(location, "r");
@@ -76,7 +78,6 @@ export default class ChunkLoader{
         author: ""
       });
 
-      
       const chunk = new Chunk({
         x,
         y,
@@ -87,13 +88,7 @@ export default class ChunkLoader{
       
       console.log(`New chunk created at ${x}x${y}`);
 
-      // Just catch edit, don't do edits here
-      // Cache this new chunk since it now has meaning (not empty)
-      chunk.once("edit", async () => {
-        console.log(`Chunk ${x}x${y} edited, triggering save...`);
-        chunk.lastModified = new Date();
-        await chunk.save();
-      });
+      // Chunk doesn't get saved until it is first edited
 
       return chunk;
     }
@@ -128,9 +123,28 @@ export default class ChunkLoader{
     }
 
     // Cache miss, load/create
-    const chunk = await this.load(x, y);
-    this.chunkCache[hash] = chunk;
+    if (loadingHashes.includes(hash)) {
+      // Chunk is loading, wait for it to complete
+      return new Promise((resolve, reject) => {
+        setTimeout(async () => {
+          if (!loadingHashes.includes(hash)) {
+            if (!this.chunkCache[hash]) {
+              // Recurse, this will trigger a new timer
+              const chunk = await this.getChunk(x, y);
+              resolve(chunk);
+            } else {
+              // Done loading
+              resolve(this.chunkCache[hash]);
+            }
+          }
+        }, 250);
+      });
+    } else {
+      const chunk = await this.load(x, y);
+      this.chunkCache[hash] = chunk;
+  
+      return chunk;
+    }
 
-    return chunk;
   }
 }
