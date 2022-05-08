@@ -1,3 +1,5 @@
+[<img alt="Infinichat demo gif" width="100%" title="Visit my website" src="demo.gif" />](https://taylorswanson.com/)
+
 # Infinichat
 
 Infinite block-based anonymous chat whiteboard experiment. Content written on this
